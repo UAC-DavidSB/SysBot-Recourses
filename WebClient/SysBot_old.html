@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetAssist - Asistente de Redes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
+            background: #0a0e27;
+            color: #e8eaed;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #0f1420;
+            border-right: 1px solid #1e293b;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .logo-icon {
+            font-size: 32px;
+        }
+
+        .logo-text h1 {
+            font-size: 20px;
+            color: #60a5fa;
+            font-weight: 600;
+        }
+
+        .logo-text p {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .new-chat-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.2s;
+        }
+
+        .new-chat-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .quick-topics {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .topic-section h3 {
+            font-size: 13px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .topic-item {
+            padding: 10px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #94a3b8;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .topic-item:hover {
+            background: #1e293b;
+            color: #e8eaed;
+        }
+
+        .topic-item::before {
+            content: '▸';
+            color: #3b82f6;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid #1e293b;
+        }
+
+        .settings-btn {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .settings-btn:hover {
+            background: #1e293b;
+            color: #e8eaed;
+            border-color: #3b82f6;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0a0e27;
+        }
+
+        .chat-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #1e293b;
+            background: #0f1420;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #60a5fa;
+        }
+
+        .header-info {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .message {
+            display: flex;
+            gap: 16px;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 20px;
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        }
+
+        .message.assistant .message-avatar {
+            background: #1e293b;
+        }
+
+        .message-content {
+            flex: 1;
+            line-height: 1.7;
+            padding-top: 8px;
+        }
+
+        .message.user .message-content {
+            color: #e8eaed;
+            font-weight: 400;
+        }
+
+        .message.assistant .message-content {
+            color: #cbd5e1;
+        }
+
+        .code-block {
+            background: #0f1420;
+            border: 1px solid #1e293b;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 8px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #22d3ee;
+            overflow-x: auto;
+        }
+
+        /* Input Area */
+        .input-container {
+            padding: 24px;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .input-wrapper {
+            background: #0f1420;
+            border: 2px solid #1e293b;
+            border-radius: 16px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: border-color 0.3s;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: #3b82f6;
+        }
+
+        .input-wrapper textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #e8eaed;
+            font-size: 15px;
+            resize: none;
+            outline: none;
+            font-family: inherit;
+            max-height: 200px;
+        }
+
+        .input-wrapper textarea::placeholder {
+            color: #475569;
+        }
+
+        .send-btn {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+            flex-shrink: 0;
+            color: white;
+            font-size: 18px;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            background: #1e293b;
+            cursor: not-allowed;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #0f1420;
+            border: 1px solid #1e293b;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 550px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            margin-bottom: 24px;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: #60a5fa;
+        }
+
+        .modal-header p {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #cbd5e1;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #e8eaed;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #1e293b;
+            color: #cbd5e1;
+        }
+
+        .btn-secondary:hover {
+            background: #334155;
+        }
+
+        .connection-status {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-success {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #22c55e;
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #475569;
+            text-align: center;
+            padding: 24px;
+        }
+
+        .empty-state h2 {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h3 {
+            font-size: 24px;
+            margin-bottom: 12px;
+            color: #cbd5e1;
+        }
+
+        .empty-state p {
+            font-size: 15px;
+            max-width: 500px;
+            line-height: 1.6;
+        }
+
+        .typing-indicator {
+            display: none;
+            gap: 4px;
+            padding: 16px;
+            align-items: center;
+        }
+
+        .typing-indicator.active {
+            display: flex;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #3b82f6;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+
+        .help-hint {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 8px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">🌐</div>
+                    <div class="logo-text">
+                        <h1>NetAssist</h1>
+                        <p>Asistente de Redes</p>
+                    </div>
+                </div>
+                <button class="new-chat-btn" onclick="newChat()">
+                    ➕ Nueva Consulta
+                </button>
+            </div>
+
+            <div class="quick-topics">
+                <div class="topic-section">
+                    <h3>🔧 Servicios de Red</h3>
+                    <div class="topic-item" onclick="askQuestion('¿Cómo configurar un servidor DNS en Windows Server?')">Configurar DNS</div>
+                    <div class="topic-item" onclick="askQuestion('¿Cómo configurar hosts virtuales en Apache?')">Virtual Hosts Apache</div>
+                    <div class="topic-item" onclick="askQuestion('¿Cómo instalar y configurar un servidor FTP con vsftpd en Linux?')">Servidor FTP</div>
+                    <div class="topic-item" onclick="askQuestion('¿Pasos para configurar un servidor SMTP con Postfix?')">Servidor SMTP</div>
+                    <div class="topic-item" onclick="askQuestion('¿Cómo habilitar SSL en Nginx?')">SSL en Nginx</div>
+                </div>
+
+                <div class="topic-section" style="margin-top: 20px;">
+                    <h3>🔌 Infraestructura de Redes</h3>
+                    <div class="topic-item" onclick="askQuestion('¿Cómo configurar una VLAN en un switch Cisco?')">Configurar VLAN</div>
+                    <div class="topic-item" onclick="askQuestion('¿Pasos para ruteo estático en un router?')">Ruteo Estático</div>
+                    <div class="topic-item" onclick="askQuestion('¿Cómo habilitar enrutamiento inter-VLAN?')">Inter-VLAN</div>
+                    <div class="topic-item" onclick="askQuestion('¿Configuración de puertos trunk en switches?')">Puertos Trunk</div>
+                    <div class="topic-item" onclick="askQuestion('¿Cómo configurar NAT en un router?')">NAT en Router</div>
+                    <div class="topic-item" onclick="askQuestion('¿Cómo configurar ACL en switches para seguridad?')">ACL Seguridad</div>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <button class="settings-btn" onclick="openSettings()">
+                    ⚙️ Configuración
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="chat-header">
+                <div>
+                    <div class="chat-title">Asistente Educativo de Redes</div>
+                    <div class="header-info">Universidad Andina del Cusco - Ingeniería de Sistemas</div>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="empty-state" id="emptyState">
+                    <h2>🌐</h2>
+                    <h3>Bienvenido a NetAssist</h3>
+                    <p>Tu asistente especializado en Administración de Servicios de Redes e Infraestructura de Redes. Pregúntame sobre configuraciones de DNS, Web, FTP, SMTP, switches, routers, VLAN y más.</p>
+                </div>
+            </div>
+
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <textarea 
+                        id="messageInput" 
+                        placeholder="Pregunta sobre configuración de redes..." 
+                        rows="1"
+                        onkeydown="handleKeyDown(event)"
+                        oninput="autoResize(this)"
+                    ></textarea>
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                        ▲
+                    </button>
+                </div>
+                <div class="help-hint">Ejemplo: ¿Cómo configurar una VLAN en un switch Cisco?</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Configuración -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ Configuración</h2>
+                <p>Configura la conexión con DeepSeek/Ollama</p>
+            </div>
+
+            <div id="connectionStatus"></div>
+
+            <div class="form-group">
+                <label>URL del Servidor</label>
+                <input type="text" id="ollamaUrl" value="http://localhost:11434" placeholder="http://localhost:11434">
+                <div class="help-hint">URL donde está ejecutándose Ollama con DeepSeek</div>
+            </div>
+
+            <div class="form-group">
+                <label>Modelo</label>
+                <select id="modelSelect">
+                    <option value="deepseek-r1:latest">DeepSeek R1</option>
+                    <option value="deepseek-coder">DeepSeek Coder</option>
+                    <option value="llama3">Llama 3</option>
+                    <option value="mistral">Mistral</option>
+                    <option value="codellama">Code Llama</option>
+                </select>
+                <div class="help-hint">Recomendado: DeepSeek para mejor precisión técnica</div>
+            </div>
+
+            <div class="form-group">
+                <label>Temperatura (Creatividad)</label>
+                <input type="number" id="temperature" value="0.3" min="0" max="2" step="0.1">
+                <div class="help-hint">Valor bajo (0.1-0.3) para respuestas precisas en configuraciones</div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeSettings()">Cancelar</button>
+                <button class="btn-primary" onclick="testAndSave()">Probar y Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let messages = [];
+        let config = {
+            url: 'http://localhost:11434',
+            model: 'deepseek-r1:latest',
+            temperature: 0.3
+        };
+
+        // Sistema de prompts RAG estructurado
+        const systemPrompt = `Eres un administrador de redes experto especializado en configuración de servicios de red e infraestructura de redes. 
+
+INSTRUCCIONES:
+- Proporciona pasos detallados y precisos para configuraciones
+- Incluye comandos exactos cuando sea necesario
+- Advierte sobre errores comunes y precauciones de seguridad
+- Usa ejemplos prácticos con snippets de configuración
+- Verifica la sintaxis de comandos antes de proporcionarlos
+- Enfatiza las mejores prácticas de seguridad
+
+ÁREAS DE ESPECIALIZACIÓN:
+- Servicios: DNS, Web (Apache/Nginx), FTP, Correo, SMTP
+- Infraestructura: Switches, Routers, VLAN, Ruteo Estático, NAT, ACL
+
+Responde en español de manera clara y educativa para estudiantes de ingeniería.`;
+
+        function loadConfig() {
+            const saved = localStorage.getItem('netassistConfig');
+            if (saved) {
+                config = JSON.parse(saved);
+                document.getElementById('ollamaUrl').value = config.url;
+                document.getElementById('modelSelect').value = config.model;
+                document.getElementById('temperature').value = config.temperature;
+            }
+        }
+
+        function saveConfig() {
+            config.url = document.getElementById('ollamaUrl').value;
+            config.model = document.getElementById('modelSelect').value;
+            config.temperature = parseFloat(document.getElementById('temperature').value);
+            localStorage.setItem('netassistConfig', JSON.stringify(config));
+        }
+
+        async function testConnection() {
+            const url = document.getElementById('ollamaUrl').value;
+            const statusDiv = document.getElementById('connectionStatus');
+            
+            try {
+                const response = await fetch(`${url}/api/tags`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const modelCount = data.models?.length || 0;
+                    statusDiv.innerHTML = `<div class="connection-status status-success">✓ Conectado - ${modelCount} modelo(s) disponible(s)</div>`;
+                    return true;
+                } else {
+                    statusDiv.innerHTML = '<div class="connection-status status-error">✗ Error: No se puede conectar al servidor</div>';
+                    return false;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="connection-status status-error">✗ Error: Verifica que Ollama esté ejecutándose</div>';
+                return false;
+            }
+        }
+
+        async function testAndSave() {
+            const success = await testConnection();
+            if (success) {
+                saveConfig();
+                setTimeout(() => closeSettings(), 1000);
+            }
+        }
+
+        function openSettings() {
+            document.getElementById('settingsModal').classList.add('active');
+            testConnection();
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        function newChat() {
+            messages = [
+                { role: 'system', content: systemPrompt }
+            ];
+            document.getElementById('chatMessages').innerHTML = `
+                <div class="empty-state">
+                    <h2>🌐</h2>
+                    <h3>Nueva Conversación</h3>
+                    <p>¿En qué configuración de redes puedo ayudarte?</p>
+                </div>
+            `;
+        }
+
+        function formatMessage(content) {
+            // Detectar y formatear bloques de código
+            content = content.replace(/```([\s\S]*?)```/g, '<div class="code-block">$1</div>');
+            content = content.replace(/`([^`]+)`/g, '<code style="background: #1e293b; padding: 2px 6px; border-radius: 3px; color: #22d3ee;">$1</code>');
+            return content;
+        }
+
+        function addMessage(role, content) {
+            const emptyState = document.getElementById('emptyState');
+            if (emptyState) emptyState.remove();
+
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const avatar = role === 'user' ? '👤' : '🤖';
+            const formattedContent = formatMessage(content);
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div class="message-content">${formattedContent}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showTyping() {
+            const chatMessages = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'message assistant';
+            typingDiv.innerHTML = `
+                <div class="message-avatar">🤖</div>
+                <div class="typing-indicator active">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function hideTyping() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) typingIndicator.remove();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+
+            // Inicializar conversación si está vacía
+            if (messages.length === 0) {
+                messages.push({ role: 'system', content: systemPrompt });
+            }
+
+            addMessage('user', message);
+            input.value = '';
+            input.style.height = 'auto';
+
+            messages.push({
+                role: 'user',
+                content: message
+            });
+
+            showTyping();
+
+            try {
+                const response = await fetch(`${config.url}/api/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model: config.model,
+                        messages: messages,
+                        stream: false,
+                        options: {
+                            temperature: config.temperature,
+                            num_predict: 2000
+                        }
+                    })
+                });
+
+                hideTyping();
+
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const assistantMessage = data.message.content;
+
+                messages.push({
+                    role: 'assistant',
+                    content: assistantMessage
+                });
+
+                addMessage('assistant', assistantMessage);
+
+            } catch (error) {
+                hideTyping();
+                addMessage('assistant', `❌ Error de conexión: ${error.message}\n\nPor favor:\n1. Verifica que Ollama esté ejecutándose\n2. Confirma que el modelo ${config.model} esté instalado\n3. Revisa la configuración en ⚙️`);
+                messages.pop();
+            } finally {
+                sendBtn.disabled = false;
+            }
+        }
+
+        function askQuestion(question) {
+            document.getElementById('messageInput').value = question;
+            sendMessage();
+        }
+
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+        }
+
+        // Inicializar
+        window.onload = function() {
+            loadConfig();
+            messages.push({ role: 'system', content: systemPrompt });
+        };
+    </script>
+</body>
+</html>
